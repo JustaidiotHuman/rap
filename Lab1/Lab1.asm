@@ -34,7 +34,7 @@ main:
     mov ebx, [b]
     imul eax,ebx
     push eax
-    push decformat
+    push hexformat
     call printf
     add esp, 8
     mov eax,0      ; returning 0 by convention
