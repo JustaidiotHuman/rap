@@ -17,7 +17,8 @@ section .data ; defines which section of the output file the code will be assemb
 
   decformat: db `%d \n`,0 ; we define the decimal format for use with C's printf function
   hexformat: db `%x\n`,0    ; and the hex format
-
+  a: dd 21
+  b: dd 2
 
 
 
@@ -29,8 +30,8 @@ main:
 
     push ebp
     mov ebp, esp
-    mov eax, 21
-    mov ebx, 2
+    mov eax, [a]
+    mov ebx, [b]
     imul eax,ebx
     push eax
     push decformat

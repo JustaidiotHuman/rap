@@ -48,3 +48,15 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Ignore all assembly listing files
+*.lst
+
+# Ignore all object files
+*.o
+
+# Ignore all output/executable files
+*.out
+
+# Ignore any temporary files (optional, in case these are generated during your process)
+*.tmp
+
