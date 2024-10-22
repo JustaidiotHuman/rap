@@ -1,43 +1,64 @@
-;
 ;---------------------------------------------------------------
-; Lab1.asm
-; 
-;
-; Author: NSFR
-;
+; Lab1.asm - Mupltiplizieren und ausgeben einer Zahl in Hexformat
+; Skalarprodukt mit Schleife berechnen (Refined version with newline fix)
+; Author: DR
 ; ---------------------------------------------------------------
 
-; declaration of functions that are not defined in the module being assembled, i.e. this file
+extern printf ; Declare printf for output
 
-extern printf; Using the  c function for output - the object file needs to be linked with a C library
+section .data
+    decformat: db `%d\n`, 0    ; Decimal format with newline
+    hexformat: db `%x\n`, 0    ; Hexadecimal format with newline
+    a: dd 21                   ; Values for a and b
+    b: dd 2
+    x: dd 17, 11, 4            ; Vector x components
+    y: dd 4, -9, 8             ; Vector y components
 
-section .data ; defines which section of the output file the code will be assembled into
-              ; here: initialised data
-              ; segment can be used instead (exactly equivalent synonym)
-
-  decformat: db `%d \n`,0 ; we define the decimal format for use with C's printf function
-  hexformat: db `%x\n`,0    ; and the hex format
-  a: dd 21
-  b: dd 2
-
-
-
-section .text    ;code segment starts here
-
-global main
+section .text
+    global main
 
 main:
 
     push ebp
     mov ebp, esp
-    mov eax, [a]
-    mov ebx, [b]
-    imul eax,ebx
-    push eax
-    push hexformat
-    call printf
-    add esp, 8
-    mov eax,0      ; returning 0 by convention
-    mov esp, ebp   ; clean up after ourselves 
-    pop ebp        ; leave could be used alternatively for the last two commands
-   ret
+
+    ; --Mulitplication and output of a*b--
+    mov eax, [a]            ; Load a into eax
+    imul eax, [b]           ; Multiply eax by b (a * b)
+    push eax                ; Push result onto the stack
+    push hexformat          ; Push hex format string onto the stack
+    call printf             ; Call printf to print hex result
+    add esp, 8              ; Clean up the stack (2 arguments)
+
+
+    ; --Calculate Scalar Product in Loop--
+    xor eax, eax            ; Clear eax (accumulator for scalar product)
+    mov ecx, 0              ; Initialize loop counter
+
+loop_start:
+    ; Check if loop is done (3 vector components)
+    cmp ecx, 3              ; Compare loop counter with 3
+    je loop_end             ; If ecx == 3, exit the loop
+
+    ; Load x[ecx] and y[ecx], multiply them
+    mov edx, [x + ecx * 4]  ; Load x[ecx] into edx
+    imul edx, [y + ecx * 4] ; Multiply edx with y[ecx]
+    add eax, edx            ; Add result to eax (accumulator)
+
+    ; Increment loop counter
+    inc ecx                 ; Increment counter
+    jmp loop_start          ; Repeat the loop
+
+loop_end:
+    ; ----------- Print Scalar Product -----------
+    push eax                ; Push scalar product onto the stack
+    push decformat          ; Push decimal format string onto the stack
+    call printf             ; Call printf to print the scalar product
+    add esp, 8              ; Clean up the stack (2 arguments)
+
+    ; ----------- Exit Program -----------
+    mov eax, 0              ; Return 0
+    mov esp, ebp
+    pop ebp
+    ret                     ; Return from main
+
