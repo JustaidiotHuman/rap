@@ -1,6 +1,6 @@
 ;---------------------------------------------------------------
 ; Fibonacci.asm - Calculate and print the first N Fibonacci numbers
-; Author: [Your Name]
+; Author: DR
 ; ---------------------------------------------------------------
 
 extern printf    ; Declare printf for output
