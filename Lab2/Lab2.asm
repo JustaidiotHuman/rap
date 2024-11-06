@@ -16,8 +16,15 @@ main:
     push ebp                 ; Save base pointer
     mov ebp, esp             ; Set up new base pointer
 
-    ; Initialize N in ecx (you can change this value)
-    mov ecx, 20              ; Calculate first 10 Fibonacci numbers
+   
+        ; Print the first 1
+    mov eax, 1               ; F(1)
+    push eax                 ; Push the Fibonacci number (F(1))
+    push decformat           ; Push the format string
+    call printf              ; Print F(1)
+    add esp, 8               ; Clean up the stack
+
+    mov ecx, 20 -1              ; Calculate first 20 Fibonacci numbers
 
     ; Initialize Fibonacci numbers
     mov eax, 1               ; F(1)
