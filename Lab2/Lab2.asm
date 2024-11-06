@@ -20,8 +20,8 @@ main:
     mov ecx, 20              ; Calculate first 10 Fibonacci numbers
 
     ; Initialize Fibonacci numbers
-    mov eax, 0               ; F(0)
-    mov edx, 1               ; F(1)
+    mov eax, 1               ; F(1)
+    mov edx, 1               ; F(2)
 
 fib_loop:
     ; Save eax, edx, and ecx (loop counter)
