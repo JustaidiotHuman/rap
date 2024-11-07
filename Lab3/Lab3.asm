@@ -53,14 +53,14 @@ collatz_loop:
 
     ; Calculate next term
     test ebx, 1              ; Test if N is odd
-    jnz odd_case             ; If N is odd, jump to odd_case
+    jnz odd             ; If N is odd, jump to odd_case
 
-even_case:
+even:
     ; N is even: N = N / 2
     shr ebx, 1               ; Divide N by 2 (shift)
     jmp collatz_loop         ; Repeat the loop
 
-odd_case:
+odd:
     ; N is odd: N = 3 * N + 1
     mov eax, ebx             ; Move N into eax
     lea eax, [eax*2 + eax]   ; Calculate 3 * N
