@@ -21,19 +21,19 @@ main:
     push ebx
 
     ; Check if one argument was passed (argc == 2)
-    mov eax, [ebp+8]         ; Load argc
-    cmp eax, 2               ; Check if argc == 2
+    mov eax, [ebp+8]         
+    cmp eax, 2               
     jne error                
 
     ; Load the argument (argv[1])
-    mov eax, [ebp+12]        ; Get address of argv array
-    add eax, 4               ; Move to argv[1]
-    mov eax, [eax]           ; Load address of argv[1] into eax
+    mov eax, [ebp+12]        
+    add eax, 4              
+    mov eax, [eax]           
     
     ; Convert to an integer
-    push eax                 ; Push address of argv[1] onto stack
+    push eax               
     call atoi                ; Call atoi to convert string to integer
-    add esp, 4               ; Clean up stack after function call
+    add esp, 4               ; Clean up stack
     mov ebx, eax
 
     ; Check if N is positive (N > 0)
@@ -42,43 +42,42 @@ main:
 
 collatz_loop:
     
-    push ebx                 ; Push the current number
-    push decformat           ; Push format string
+    push ebx              
+    push decformat          
     call printf              ; Call printf to print the number
     add esp, 8               ; Clean up the stack
 
     ; Check if N == 1
-    cmp ebx, 1               ; Compare N with 1
-    je end            ; If N == 1, end
+    cmp ebx, 1               
+    je end            
 
     ; Calculate next term
     test ebx, 1              ; Test if N is odd
-    jnz odd             ; If N is odd, jump to odd_case
+    jnz odd             
 
 even:
-    ; N is even: N = N / 2
+    ; N = N / 2
     shr ebx, 1               ; Divide N by 2 (shift)
-    jmp collatz_loop         ; Repeat the loop
+    jmp collatz_loop         
 
 odd:
-    ; N is odd: N = 3 * N + 1
+    ; N = 3 * N + 1
     mov eax, ebx             ; Move N into eax
-    lea eax, [eax*2 + eax]   ; Calculate 3 * N
-    add eax, 1               ; Add 1
-    mov ebx, eax             ; Store the result back in N (ebx)
+    imul eax, eax, 3
+    add eax, 1
+    mov ebx, eax            
     jmp collatz_loop         ; Repeat the loop
 
 error:
-    push errormsg            ; Push error message
+    push errormsg           
     call printf              ; Print the error message
     add esp, 4               ; Clean up stack
-    jmp end                  ; Jump to end
+    jmp end                
 
 end:
     ; Restore ebx
     pop ebx
 
-    ; Function epilogue
     mov eax, 0               ; Return 0
     mov esp, ebp
     pop ebp
