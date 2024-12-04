@@ -1,77 +1,133 @@
+;---------------------------------------------------------------
+;isbn.asm Berechnung der ISBN-13 Prüfziffer
+;Author: DR
+;
+; Beispiele: 
+; 978-3-8458-3851 : Prüfziffer = 9 
+; 978-3-455-01430 : Prüfziffer = 3 
+; 978-3-518-46920 : Prüfziffer = 0 
+;
+; ---------------------------------------------------------------
+
+section .data
+  weightedSum: dd 0          ; Accumulates the weighted sum of ISBN digits
+  digitCount: dd 0           ; Counts the number of digits in the ISBN
+  dashCount: dd 0            ; Counts the number of dashes in the ISBN
+
 section .text
-global isbn
+	global isbn
 
 isbn:
-    ; Prologue
-    push ebp
-    mov ebp, esp
+	; Prologue: Set up stack frame
+	push ebp                  ; Save base pointer
+	mov ebp, esp              ; Set new base pointer
 
-    ; Load address of ISBN string into EBX
-    mov ebx, [esp + 8]
+	; Load the address of the ISBN string into EBX
+	mov ebx, [esp + 8]        ; EBX points to the input string (ISBN)
 
-    ; Initialize counters and accumulators
-    xor ecx, ecx            ; ECX = 0 (digit count)
-    xor edx, edx            ; EDX = 0 (dash count)
-    xor eax, eax            ; EAX = 0 (accumulated weighted sum)
-    mov esi, 1              ; Weight (alternates between 1 and 3)
+	; Initialize the weight alternating variable
+	mov ecx, 3                ; Weight starts at 3
 
-iterate_isbn:
-    mov al, [ebx]           ; Load current character
-    cmp al, 0               ; Check for string termination
-    je validate_counts      ; If null terminator, validate counts
+	; Clear EAX (used for calculations)
+	xor eax, eax
 
-    cmp al, '-'             ; Check if character is a dash
-    je count_dash           ; Jump if it's a dash
+	; Loop through the ISBN string
+isbnLoop:
+	; Load the current character into AL
+	mov al, [ebx]
 
-    ; Check if character is a digit
-    cmp al, '0'
-    jl error_nan            ; If less than '0', it's invalid
-    cmp al, '9'
-    jg error_nan            ; If greater than '9', it's invalid
+	; Check for the end of the string (null terminator)
+	cmp al, 0                 ; Is the character null?
+	je isbnLoop_exit          ; If yes, exit the loop
 
-    ; Valid digit
-    sub al, '0'             ; Convert ASCII to integer
-    imul eax, esi           ; Multiply digit by weight (EAX *= ESI)
-    add edx, eax            ; Add weighted value to total sum
-    inc ecx                 ; Increment digit count
+	; Check if the character is a dash ('-')
+	cmp al, '-'
+	je handle_dash            ; If it's a dash, handle it
 
-    ; Toggle weight between 1 and 3
-    xor esi, 2              ; Toggle weight: 1 <-> 3
-    jmp next_char
+	; Convert ASCII digit ('0'-'9') to integer by removing ASCII bias
+	sub al, 48                ; Subtract ASCII value of '0'
 
-count_dash:
-    inc edx                 ; Increment dash count
-    jmp next_char
+	; Check if the character is not a valid digit (less than 0 or greater than 9)
+	cmp al, 0
+	jl handle_nan             ; If less than 0, it's invalid
+	cmp al, 9
+	jg handle_nan             ; If greater than 9, it's invalid
 
-next_char:
-    inc ebx                 ; Move to next character
-    jmp iterate_isbn
+	; At this point, AL contains a valid digit
 
-validate_counts:
-    ; Check for correct number of digits and dashes
-    cmp ecx, 12             ; Check if digit count is 12
-    jne error_nan
-    cmp edx, 3              ; Check if dash count is 3
-    jne error_nan
+	; Alternate the weight between 1 and 3
+	xor ecx, 2                ; Toggle ECX between 1 and 3
 
-    ; Calculate check digit
-    xor eax, eax            ; Clear EAX
-    mov eax, edx            ; Load accumulated weighted sum
-    mov ecx, 10             ; Modulo base (10)
-    xor edx, edx            ; Clear EDX for division
-    div ecx                 ; EDX = Weighted Sum % 10, EAX = Sum / 10
+	; Multiply the digit by the weight and add it to the weighted sum
+	mul ecx                   ; EAX = AL * ECX
+	add dword [weightedSum], eax ; Add the result to the weighted sum
 
-    mov eax, edx            ; Load remainder (EDX) into EAX
-    sub ecx, eax            ; EAX = 10 - Remainder
-    and ecx, 0xF            ; Ensure EAX is within 0-9
-    mov eax, ecx            ; Final check digit
+	; Move to the next character in the string
+	add ebx, 1
 
-    jmp exit_isbn
+	; Increment the digit counter
+	add dword [digitCount], 1 ; Increment the digit count by 1
 
-error_nan:
-    mov eax, -1             ; Return error code (-1)
+	; Repeat the loop
+	jmp isbnLoop
 
-exit_isbn:
-    ; Epilogue
-    leave
-    ret
+; Exit the loop when the string ends
+isbnLoop_exit:
+	; Check if the number of dashes is correct (must be 3)
+	cmp dword [dashCount], 3
+	jne handle_wrong_amount_of_dashes ; If not 3, handle the error
+
+	; Check if the number of digits is correct (must be 12)
+	cmp dword [digitCount], 12
+	jne handle_wrong_amount_of_digits ; If not 12, handle the error
+
+	; Calculate the final checksum
+	; Load the weighted sum into AX for division
+	mov ax, [weightedSum]
+	mov dl, 10                ; Divisor is 10
+
+	div dl                    ; AX = AX / DL (AX contains quotient, remainder in AH)
+
+	; If the remainder (AH) is 0, the checksum is 0
+	cmp ah, 0
+	je checksum_already_zero
+
+	; Otherwise, calculate the checksum
+	mov ebx, 10
+	movzx edx, ah             ; Load the remainder (AH) into EDX
+
+	sub ebx, edx              ; EBX = 10 - remainder
+	mov eax, ebx              ; EAX contains the final checksum
+
+	; Exit the procedure
+	jmp calc_isbn_checksum_exit
+
+checksum_already_zero:
+	mov eax, 0                ; If remainder is 0, checksum is 0
+
+; Exit point for the procedure
+calc_isbn_checksum_exit:
+	; Epilogue: Restore stack and return
+	leave                     ; Clean up the stack frame
+	ret                       ; Return to caller
+
+; Handle a dash character ('-')
+handle_dash:
+	add dword [dashCount], 1  ; Increment the dash count
+	add ebx, 1                ; Move to the next character in the string
+	jmp isbnLoop              ; Return to the loop
+
+; Handle invalid characters (not a digit or dash)
+handle_nan:
+	mov eax, -1               ; Return error code -1
+	jmp calc_isbn_checksum_exit
+
+; Handle incorrect number of dashes
+handle_wrong_amount_of_dashes:
+	mov eax, -1               ; Return error code -1
+	jmp calc_isbn_checksum_exit
+
+; Handle incorrect number of digits
+handle_wrong_amount_of_digits:
+	mov eax, -1               ; Return error code -1
+	jmp calc_isbn_checksum_exit
