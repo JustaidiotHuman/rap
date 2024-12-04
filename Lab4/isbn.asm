@@ -2,7 +2,7 @@ section .text
 global isbn
 
 isbn:
-    ; Function prologue
+    ; Prologue
     push ebp
     mov ebp, esp
 
@@ -10,35 +10,36 @@ isbn:
     mov ebx, [esp + 8]
 
     ; Initialize counters and accumulators
-    xor ecx, ecx            ; ECX = 0 (digits)
-    xor edx, edx            ; EDX = 0 (dashes)
-    xor eax, eax            ; EAX = 0 (sum)
-    mov esi, 1              ; Weight (1 to 3)
+    xor ecx, ecx            ; ECX = 0 (digit count)
+    xor edx, edx            ; EDX = 0 (dash count)
+    xor eax, eax            ; EAX = 0 (accumulated weighted sum)
+    mov esi, 1              ; Weight (alternates between 1 and 3)
 
 iterate_isbn:
     mov al, [ebx]           ; Load current character
     cmp al, 0               ; Check for string termination
-    je validate_counts       ; If null terminator, validate counts
+    je validate_counts      ; If null terminator, validate counts
 
     cmp al, '-'             ; Check if character is a dash
-    je handle_dash
+    je count_dash           ; Jump if it's a dash
 
     ; Check if character is a digit
-    sub al, '0'             ; Convert ASCII to integer
-    cmp al, 9
-    ja error_nan            ; If not a valid digit, error
+    cmp al, '0'
+    jl error_nan            ; If less than '0', it's invalid
+    cmp al, '9'
+    jg error_nan            ; If greater than '9', it's invalid
 
-    ; Add weighted value to the sum
+    ; Valid digit
+    sub al, '0'             ; Convert ASCII to integer
     imul eax, esi           ; Multiply digit by weight (EAX *= ESI)
     add edx, eax            ; Add weighted value to total sum
     inc ecx                 ; Increment digit count
 
     ; Toggle weight between 1 and 3
     xor esi, 2              ; Toggle weight: 1 <-> 3
-
     jmp next_char
 
-handle_dash:
+count_dash:
     inc edx                 ; Increment dash count
     jmp next_char
 
