@@ -18,18 +18,13 @@ isbn:
     mov ebp, esp                ; Set new base pointer
     sub esp, 12                 ; Allocate space for local variables
 
-    ; Local variables on stack:
-    ; [ebp-4]  - weightedSum
-    ; [ebp-8]  - digitCount
-    ; [ebp-12] - dashCount
-
     ; Initialize local variables
     mov dword [ebp-4], 0        ; weightedSum = 0
     mov dword [ebp-8], 0        ; digitCount = 0
     mov dword [ebp-12], 0       ; dashCount = 0
 
     ; Load the address of the ISBN string into EBX
-    mov ebx, [ebp+8]            ; EBX points to the input string (ISBN)
+    mov ebx, [ebp+8]           
 
     ; Initialize the weight alternating variable
     mov ecx, 1                  ; Start with weight = 1
@@ -39,18 +34,18 @@ isbn:
 
     ; Loop through the ISBN string
 isbnLoop:
-    ; Load the current character into AL
+    ; Load the current character
     mov al, [ebx]
 
     ; Check for the end of the string (null terminator)
-    cmp al, 0                   ; Is the character null?
-    je isbnLoop_exit            ; If yes, exit the loop
+    cmp al, 0                   ; Is character null?
+    je isbnLoopExit         
 
     ; Check if the character is a dash ('-')
     cmp al, '-'
-    je handle_dash              ; If it's a dash, handle it
+    je handle_dash             
 
-    ; Convert ASCII digit ('0'-'9') to integer by removing ASCII bias
+    ; Convert ASCII digit ('0'-'9') to integer
     sub al, 48                  ; Subtract ASCII value of '0'
 
     ; Check if the character is not a valid digit (less than 0 or greater than 9)
@@ -59,22 +54,21 @@ isbnLoop:
     cmp al, 9
     jg error                    ; If greater than 9, jump to error
 
-    ; At this point, AL contains a valid digit
 
-    ; Multiply the digit by the weight and add it to the weighted sum
+    ; Multiply  by the weight and add it to the weighted sum
     movzx eax, al               ; Zero-extend AL into EAX
     imul eax, ecx               ; EAX = AL * ECX
     add dword [ebp-4], eax      ; Add the result to the weighted sum
 
     ; Alternate the weight between 1 and 3
     cmp ecx, 1                  ; If weight is 1, switch to 3
-    je set_weight_to_3
+    je setWeightToThree
     mov ecx, 1                  ; Otherwise, switch to 1
-    jmp continue_loop
-set_weight_to_3:
+    jmp continueLoop
+setWeightToThree:
     mov ecx, 3
 
-continue_loop:
+continueLoop:
     ; Move to the next character in the string
     add ebx, 1
 
@@ -85,7 +79,7 @@ continue_loop:
     jmp isbnLoop
 
 ; Exit the loop when the string ends
-isbnLoop_exit:
+isbnLoopExit:
     ; Check if the number of dashes is correct (must be 3)
     cmp dword [ebp-12], 3
     jne error                   ; If not 3, jump to error
