@@ -32,7 +32,7 @@ isbn:
     mov ebx, [ebp+8]            ; EBX points to the input string (ISBN)
 
     ; Initialize the weight alternating variable
-    mov ecx, 3                  ; Weight starts at 3
+    mov ecx, 1                  ; Start with weight = 1
 
     ; Clear EAX (used for calculations)
     xor eax, eax
@@ -61,14 +61,20 @@ isbnLoop:
 
     ; At this point, AL contains a valid digit
 
-    ; Alternate the weight between 1 and 3
-    xor ecx, 2                  ; Toggle ECX between 1 and 3
-
     ; Multiply the digit by the weight and add it to the weighted sum
     movzx eax, al               ; Zero-extend AL into EAX
     imul eax, ecx               ; EAX = AL * ECX
     add dword [ebp-4], eax      ; Add the result to the weighted sum
 
+    ; Alternate the weight between 1 and 3
+    cmp ecx, 1                  ; If weight is 1, switch to 3
+    je set_weight_to_3
+    mov ecx, 1                  ; Otherwise, switch to 1
+    jmp continue_loop
+set_weight_to_3:
+    mov ecx, 3
+
+continue_loop:
     ; Move to the next character in the string
     add ebx, 1
 
