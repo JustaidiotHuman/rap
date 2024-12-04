@@ -62,8 +62,8 @@ validate_counts:
     ; Calculate checksum
     mov eax, edx           ; Load weighted sum
     xor edx, edx           ; Clear EDX
-    mov ecx, 10
-    div ecx                ; Remainder in EDX
+    mov ecx, 10            ; Set divisor
+    div ecx                ; Perform 32-bit division, remainder in EDX
 
     cmp edx, 0             ; If remainder is 0, checksum is 0
     je checksum_zero
